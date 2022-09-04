@@ -1,5 +1,5 @@
 <template>
-  <LiftCommon msg="Welcome to Your Vue.js App"/>
+  <LiftCommon/>
 </template>
 
 <script>
