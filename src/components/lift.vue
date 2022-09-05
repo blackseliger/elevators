@@ -1,34 +1,62 @@
 <template>
   <div class="lift">
-    <div class="lift__shaft_5 lift__shaft">5</div>
-    <div class="lift__shaft_4 lift__shaft">4</div>
-    <div class="lift__shaft_3 lift__shaft">3</div>
-    <div class="lift__shaft_2 lift__shaft">2</div>
-    <div class="lift__shaft_1 lift__shaft">1</div>
-    <div class="lift__shaft_cabin lift__shaft" :style="classMove" ref="cabin">
-      cabin
+    <div
+      v-for="level in levels"
+      :key="`${level}-lift`"
+      :class="`lift__shaft_${level} lift__shaft`"
+    >
+      {{ level }}
     </div>
 
-    <ui-button :value="5" v-model:selected="selected" class="lift__button_5"
-      >5 этаж</ui-button
+    <div
+      class="lift__shaft_cabin lift__shaft"
+      :class="{ lift__shaft_cabin_blinker: blink }"
+      :style="classMove"
+      ref="cabin"
     >
-    <ui-button :value="4" v-model:selected="selected" class="lift__button_4"
-      >4 этаж</ui-button
-    >
-    <ui-button :value="3" v-model:selected="selected" class="lift__button_3"
-      >3 этаж</ui-button
-    >
-    <ui-button :value="2" v-model:selected="selected" class="lift__button_2"
-      >2 этаж</ui-button
-    >
-    <ui-button :value="1" v-model:selected="selected" class="lift__button_1"
-      >1 этаж</ui-button
+      <ui-icon
+        style="
+          position: absolute;
+          transform: rotate(270deg);
+          top: -17px;
+          background-color: #2711c1b3;
+          width: 40px;
+          height: 50px;
+          opacity: 0.6;
+        "
+        :icon="`arrow`"
+        v-show="showDirect === 'up' ? true : false"
+      />
+      cabin
+      <ui-icon
+        style="
+          position: absolute;
+          transform: rotate(90deg);
+          top: 68%;
+          background-color: #2711c1b3;
+          width: 40px;
+          height: 50px;
+          opacity: 0.6;
+        "
+        :icon="`arrow`"
+        v-show="showDirect === 'down' ? true : false"
+      />
+    </div>
+
+    <ui-button
+      v-for="level in levels"
+      :key="`${level}-button`"
+      :value="level"
+      v-model:selected="selected"
+      :class="`lift__button_${level}`"
+      >{{ level }} этаж</ui-button
     >
   </div>
 </template>
 
 <script>
 import UiButton from "@/components/UiButton.vue";
+import UiIcon from "@/components/UiIcon.vue";
 
 // фактический параметр задания. В нашем случае работаем с 5 этажами.
 const amountFloor = 5;
@@ -39,6 +67,14 @@ export default {
 
   components: {
     UiButton,
+    UiIcon,
+  },
+
+  props: {
+    levels: {
+      type: Array,
+      required: true,
+    },
   },
 
   data() {
@@ -54,11 +90,12 @@ export default {
       // класс с опциями, для движения кабины
       classMove: null,
       // ожидаемые актуальные координаты прибытия кабины
-      coords: null,
+      showDirect: null,
       // индекс сет интервала когда запускается работа лифта.
       indexStart: false,
       // находится ли в движении
       move: false,
+      blink: false,
     };
   },
 
@@ -71,23 +108,23 @@ export default {
           (amountValuesH * 0.01)
       );
 
-      console.log(this.move, this.pause.rest, coords, this.queue[0]?.coords);
-
       this.classMove = {
         top: `${this.queue[0]?.coords}%`,
         transition: `top ${this.queue[0]?.speed}s ease-in-out`,
       };
+
       this.move = true;
+      this.showDirect = this.queue[0]?.direction;
 
       if (this.pause.rest) return null;
-
       if (coords === this.queue[0]?.coords && this.move) {
         this.move = false;
         this.pause.rest = true;
-
+        this.blink = true;
         setTimeout(() => {
           this.move = false;
           this.pause.rest = false;
+        this.blink = false;
           this.queue.shift();
         }, 3000);
       }
@@ -119,11 +156,12 @@ export default {
             coords: 100 - Math.floor((actualFloor * 100) / amountFloor),
           });
         } else {
-          console.log("запустился второй случай");
           this.queue.push({
             actualFloor: actualFloor,
             // расчет скорости для анимации, должен всегда 1 этаж в секунду
-            speed: Math.abs(actualFloor - (prevFloor + 1)),
+            // speed: Math.abs(actualFloor - (prevFloor + 1)),
+            speed: Math.abs(actualFloor - prevFloor),
+
             // установка направления поездки
             direction: actualFloor > prevFloor ? "up" : "down",
             coords: 100 - Math.floor((actualFloor * 100) / amountFloor),
@@ -136,10 +174,8 @@ export default {
         // вариант если дальше работать через метод
         // каждую секунду вызывает метод для проверка
         if (this.indexStart === false) {
-          console.log("запустился метод");
           this.indexStart = setInterval(() => {
             this.pushLift();
-            console.log("метод запускается каждую секунду");
           }, 1000);
         }
       },
@@ -185,18 +221,14 @@ export default {
     position: absolute;
     background-color: rgb(211, 78, 78);
     top: 80%;
-    // проверить динамически ли завит от количества этажей...
-    /* const left */
     left: 1px;
     width: 100px;
     height: 100px;
-    // transition: top 5s ease-in-out;
     border: 1px solid #d34e4e;
   }
 
-  &__shaft_cabin_move {
-    // top: calc(105px + 1px);
-    // top: 60%;
+  &__shaft_cabin_blinker {
+    animation: blinker 1s step-start infinite;
   }
 
   &__shaft_5 {
@@ -242,6 +274,13 @@ export default {
   }
   &__button_1 {
     grid-area: control1;
+  }
+
+  @keyframes blinker {
+    50% {
+      opacity: 0.5;
+    }
+    // придумать что то получше
   }
 }
 </style>

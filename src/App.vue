@@ -1,16 +1,20 @@
 <template>
-  <LiftCommon/>
+  <LiftCommon :levels="levels"/>
 </template>
 
 <script>
-import LiftCommon from './components/lift.vue'
+import LiftCommon from "./components/lift.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    LiftCommon
-  }
-}
+    LiftCommon,
+  },
+
+  data() {
+    return { levels: [5, 4, 3, 2, 1] };
+  },
+};
 </script>
 
 <style>
