@@ -5,7 +5,9 @@
     <div class="lift__shaft_3 lift__shaft">3</div>
     <div class="lift__shaft_2 lift__shaft">2</div>
     <div class="lift__shaft_1 lift__shaft">1</div>
-    <div class="lift__shaft_cabin lift__shaft" ref="cabin">cabin</div>
+    <div class="lift__shaft_cabin lift__shaft" :style="classMove" ref="cabin">
+      cabin
+    </div>
 
     <ui-button :value="5" v-model:selected="selected" class="lift__button_5"
       >5 этаж</ui-button
@@ -29,8 +31,8 @@
 import UiButton from "@/components/UiButton.vue";
 
 // фактический параметр задания. В нашем случае работаем с 5 этажами.
-// const amountValuesH = 5 * 100;
 const amountFloor = 5;
+const amountValuesH = amountFloor * 100 + 6 + (amountFloor - 1) * 5;
 
 export default {
   name: "LiftCommon",
@@ -45,10 +47,8 @@ export default {
       floors: [],
       // очередь
       queue: [],
-      // проверка для computed длины queue
-      queueLen: 0,
       // на паузе по умолчанию до первого старта
-      pause: { timer: 3 },
+      pause: { rest: false },
       // выбранный этаж
       selected: 0,
       // класс с опциями, для движения кабины
@@ -56,44 +56,41 @@ export default {
       // ожидаемые актуальные координаты прибытия кабины
       coords: null,
       // индекс сет интервала когда запускается работа лифта.
-      indexStart: null,
+      indexStart: false,
       // находится ли в движении
       move: false,
     };
   },
 
-  // methods: {
-  //   // метод, который запускает движение лифта
-  //   pushLift() {
-  //     if (!this.pause.timer >= 3 || !this.move ) return null;
-  //     // проверка на отдых лифта
-  //     const styleMove = {
-  //       top: `${this.queue[0].coords}`,
-  //     }
-  //     // this.pause.timer = 0;
-  //   },
-  // },
-
-  computed: {
+  methods: {
+    // метод, который запускает движение лифта
     pushLift() {
-      console.log('ghdkgjhd');
-      // с проверками бедааааааа 
-      // чтоб постоянно не перезапускался при удалении из очереди
-      if (this.queue.length === this.queueLen) return;
-      if (!this.pause.timer >= 3 || !this.move) return;
+      const cabin = this.$refs.cabin;
+      let coords = Math.ceil(
+        Math.ceil(parseFloat(getComputedStyle(cabin).top)) /
+          (amountValuesH * 0.01)
+      );
 
-      const styleMove = {
-        top: `${this.queue[0].coords}`,
+      console.log(this.move, this.pause.rest, coords, this.queue[0]?.coords);
+
+      this.classMove = {
+        top: `${this.queue[0]?.coords}%`,
+        transition: `top ${this.queue[0]?.speed}s ease-in-out`,
       };
-      // необходимо узнать когда кабина находится на этаже. Див блок над див блоком.
-      // попробовать сравнить позиции через top 
-      // или через сет таймаут попробовать на крайний случай, но он иногда подводит
-      // this.$refs.cabin.styles.top
-      console.log('pushLift');
+      this.move = true;
 
-      // if (this.queue[0].coords === )
+      if (this.pause.rest) return null;
 
-      return styleMove;
+      if (coords === this.queue[0]?.coords && this.move) {
+        this.move = false;
+        this.pause.rest = true;
+
+        setTimeout(() => {
+          this.move = false;
+          this.pause.rest = false;
+          this.queue.shift();
+        }, 3000);
+      }
     },
   },
 
@@ -106,45 +103,45 @@ export default {
     // здесь добавляется в очередь количество будущих поездок на этажи
     floors: {
       deep: true,
-      // immediate: true,
       handler() {
         let actualFloor = this.floors[this.floors.length - 1];
         let prevFloor = this.floors[this.floors.length - 2];
-        console.log(actualFloor, prevFloor);
         // если этажи равны, то ничего не делаем;
         if (actualFloor === prevFloor) return null;
         // первый запуск, предыдущего этажа тут нет
         if (this.floors.length === 1 && prevFloor === undefined) {
-          return this.queue.push({
+          this.queue.push({
             actualFloor: actualFloor,
-            speed: actualFloor,
-            arrive: false,
+            speed: actualFloor === 0 ? 1 : actualFloor,
             // по умолчанию первый раз навверх лифт идет
             direction: "up",
             // ожидаемые координаты прибытия в процентах
-            coords: Math.floor((actualFloor * 100) / amountFloor),
+            coords: 100 - Math.floor((actualFloor * 100) / amountFloor),
+          });
+        } else {
+          console.log("запустился второй случай");
+          this.queue.push({
+            actualFloor: actualFloor,
+            // расчет скорости для анимации, должен всегда 1 этаж в секунду
+            speed: Math.abs(actualFloor - (prevFloor + 1)),
+            // установка направления поездки
+            direction: actualFloor > prevFloor ? "up" : "down",
+            coords: 100 - Math.floor((actualFloor * 100) / amountFloor),
           });
         }
-
-        this.queue.push({
-          actualFloor: actualFloor,
-          // расчет скорости для анимации, должен всегда 1 этаж в секунду
-          speed: Math.abs(actualFloor - (prevFloor + 1)),
-          arrive: false,
-          // установка направления поездки
-          direction: actualFloor > prevFloor ? "up" : "down",
-          coords: Math.floor((actualFloor * 100) / amountFloor),
-        });
-
-        // this.queueLen = this.queue.length;
 
         // запускает работу
         // проверка на первый запуск, чтоб не запускался по новой регулярно
 
         // вариант если дальше работать через метод
-        // if (!this.indexStart) {
-        //   this.indexStart = setInterval(() => this.pushLift(), 1000);
-        // }
+        // каждую секунду вызывает метод для проверка
+        if (this.indexStart === false) {
+          console.log("запустился метод");
+          this.indexStart = setInterval(() => {
+            this.pushLift();
+            console.log("метод запускается каждую секунду");
+          }, 1000);
+        }
       },
     },
   },
@@ -193,7 +190,7 @@ export default {
     left: 1px;
     width: 100px;
     height: 100px;
-    transition: top 5s ease-in-out;
+    // transition: top 5s ease-in-out;
     border: 1px solid #d34e4e;
   }
 
