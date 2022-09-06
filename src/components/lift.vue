@@ -1,3 +1,4 @@
+<!-- eslint-disable no-debugger -->
 <template>
   <div class="lift">
     <div
@@ -48,7 +49,11 @@
       :key="`${level}-button`"
       :value="level"
       v-model:selected="selected"
-      :class="`lift__button_${level}`"
+      :class="[
+        parseInt(level) === queue[0]?.actualFloor ? 'lift__button_actual' : '',
+        floors?.includes(parseInt(level)) ? 'lift__button_queue' : '',
+        `lift__button_${level}`,
+      ]"
       >{{ level }} этаж</ui-button
     >
   </div>
@@ -57,6 +62,7 @@
 <script>
 import UiButton from "@/components/UiButton.vue";
 import UiIcon from "@/components/UiIcon.vue";
+// import { cloneDeep } from "lodash";
 
 // фактический параметр задания. В нашем случае работаем с 5 этажами.
 const amountFloor = 5;
@@ -118,13 +124,17 @@ export default {
 
       if (this.pause.rest) return null;
       if (coords === this.queue[0]?.coords && this.move) {
+        // не могу понять в чем баг если выбрать больше 2 этажей, то последний будет бликать 6 секунд. this.queue.shift(); первый раз срабатывает корректно
+        // но сам this.queue для setTimeout не обновляется
+
         this.move = false;
         this.pause.rest = true;
         this.blink = true;
+        // для стилизации кнопок которые в очереди, к ним еще лифт не идет
         setTimeout(() => {
-          this.move = false;
+          this.floors.shift();
           this.pause.rest = false;
-        this.blink = false;
+          this.blink = false;
           this.queue.shift();
         }, 3000);
       }
@@ -147,6 +157,12 @@ export default {
         if (actualFloor === prevFloor) return null;
         // первый запуск, предыдущего этажа тут нет
         if (this.floors.length === 1 && prevFloor === undefined) {
+          // проверка на первый случай, чтоб находясь на 1 этаже нельзя было выбрать 1 этаж
+          if (actualFloor === 1) {
+            this.floors.shift();
+            return null;
+          }
+
           this.queue.push({
             actualFloor: actualFloor,
             speed: actualFloor === 0 ? 1 : actualFloor,
@@ -248,16 +264,11 @@ export default {
   }
 
   &__button {
-    width: 50px;
-    height: 50px;
-    border: none;
-    outline: none;
-    background-color: rgb(223, 99, 240);
-    cursor: pointer;
-    transition: background 200ms ease-in-out;
-
-    &:hover {
-      background-color: rgb(140, 68, 223);
+    &_queue {
+      background-color: rgba(54, 106, 136, 0.753);
+    }
+    &_actual {
+      background-color: #4bc9e9;
     }
   }
   &__button_5 {
