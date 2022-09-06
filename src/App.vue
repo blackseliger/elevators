@@ -1,14 +1,14 @@
 <template>
-  <LiftCommon :levels="levels"/>
+  <LiftPage :levels="levels"/>
 </template>
 
 <script>
-import LiftCommon from "./components/lift.vue";
+import LiftPage from "./components/LiftPage.vue";
 
 export default {
   name: "App",
   components: {
-    LiftCommon,
+    LiftPage,
   },
 
   data() {

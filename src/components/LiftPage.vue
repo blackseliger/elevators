@@ -63,12 +63,8 @@
 import UiButton from "@/components/UiButton.vue";
 import UiIcon from "@/components/UiIcon.vue";
 
-// фактический параметр задания. В нашем случае работаем с 5 этажами.
-const amountFloor = 5;
-const amountValuesH = amountFloor * 100 + 6 + (amountFloor - 1) * 5;
-
 export default {
-  name: "LiftCommon",
+  name: "LiftPage",
 
   components: {
     UiButton,
@@ -116,6 +112,8 @@ export default {
     // метод, который запускает движение лифта
     pushLift() {
       const cabin = this.$refs.cabin;
+      let amountValuesH =
+        this.levels.length * 100 + 6 + (this.levels.length - 1) * 5;
       let coords = Math.ceil(
         Math.ceil(parseFloat(getComputedStyle(cabin).top)) /
           (amountValuesH * 0.01)
@@ -151,6 +149,7 @@ export default {
 
     startWork() {
       // каждую секунду вызывает метод для проверка
+      // проверка на первый запуск, чтоб не запускался по новой регулярно
       if (this.indexStart === false) {
         this.indexStart = setInterval(() => {
           this.pushLift();
@@ -193,7 +192,7 @@ export default {
             // по умолчанию первый раз навверх лифт идет
             direction: "up",
             // ожидаемые координаты прибытия в процентах
-            coords: 100 - Math.floor((actualFloor * 100) / amountFloor),
+            coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
           });
           this.workLocalStorage("queue");
         } else {
@@ -205,14 +204,12 @@ export default {
 
             // установка направления поездки
             direction: actualFloor > prevFloor ? "up" : "down",
-            coords: 100 - Math.floor((actualFloor * 100) / amountFloor),
+            coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
           });
           this.workLocalStorage("queue");
         }
 
         // запускает работу
-        // проверка на первый запуск, чтоб не запускался по новой регулярно
-
         this.startWork();
       },
     },
