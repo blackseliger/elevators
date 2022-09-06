@@ -62,7 +62,6 @@
 <script>
 import UiButton from "@/components/UiButton.vue";
 import UiIcon from "@/components/UiIcon.vue";
-// import { cloneDeep } from "lodash";
 
 // фактический параметр задания. В нашем случае работаем с 5 этажами.
 const amountFloor = 5;
@@ -105,6 +104,14 @@ export default {
     };
   },
 
+  mounted() {
+    this.floors = JSON.parse(localStorage.getItem("floors")) || [];
+    this.queue = JSON.parse(localStorage.getItem("queue")) || [];
+    if (this.floors.length || this.queue.length) {
+      this.startWork();
+    }
+  },
+
   methods: {
     // метод, который запускает движение лифта
     pushLift() {
@@ -136,8 +143,23 @@ export default {
           this.pause.rest = false;
           this.blink = false;
           this.queue.shift();
+          this.workLocalStorage("floors");
+          this.workLocalStorage("queue");
         }, 3000);
       }
+    },
+
+    startWork() {
+      // каждую секунду вызывает метод для проверка
+      if (this.indexStart === false) {
+        this.indexStart = setInterval(() => {
+          this.pushLift();
+        }, 1000);
+      }
+    },
+
+    workLocalStorage(name) {
+      localStorage.setItem(name, JSON.stringify(this[name]));
     },
   },
 
@@ -145,6 +167,7 @@ export default {
     // выбирается актуальный вызов лифта и добавляется в стек "вызовов" этажей
     selected() {
       this.floors.push(this.selected);
+      this.workLocalStorage("floors");
     },
 
     // здесь добавляется в очередь количество будущих поездок на этажи
@@ -160,6 +183,7 @@ export default {
           // проверка на первый случай, чтоб находясь на 1 этаже нельзя было выбрать 1 этаж
           if (actualFloor === 1) {
             this.floors.shift();
+            this.workLocalStorage("floors");
             return null;
           }
 
@@ -171,6 +195,7 @@ export default {
             // ожидаемые координаты прибытия в процентах
             coords: 100 - Math.floor((actualFloor * 100) / amountFloor),
           });
+          this.workLocalStorage("queue");
         } else {
           this.queue.push({
             actualFloor: actualFloor,
@@ -182,18 +207,13 @@ export default {
             direction: actualFloor > prevFloor ? "up" : "down",
             coords: 100 - Math.floor((actualFloor * 100) / amountFloor),
           });
+          this.workLocalStorage("queue");
         }
 
         // запускает работу
         // проверка на первый запуск, чтоб не запускался по новой регулярно
 
-        // вариант если дальше работать через метод
-        // каждую секунду вызывает метод для проверка
-        if (this.indexStart === false) {
-          this.indexStart = setInterval(() => {
-            this.pushLift();
-          }, 1000);
-        }
+        this.startWork();
       },
     },
   },
