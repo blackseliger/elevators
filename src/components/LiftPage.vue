@@ -82,6 +82,8 @@ export default {
     return {
       // стек этажей, первый зашел - первый вышел
       floors: [],
+      // последний этаж
+      lastfloor: '',
       // очередь
       queue: [],
       // на паузе по умолчанию до первого старта
@@ -103,6 +105,10 @@ export default {
   mounted() {
     this.floors = JSON.parse(localStorage.getItem("floors")) || [];
     this.queue = JSON.parse(localStorage.getItem("queue")) || [];
+    this.lastfloor = JSON.parse(localStorage.getItem("lastfloor")) || 1;
+    
+    this.classMove = {top: `${100 - Math.floor((this.lastfloor * 100) / this.levels.length)}%`}
+
     if (this.floors.length || this.queue.length) {
       this.startWork();
     }
@@ -137,6 +143,10 @@ export default {
         this.blink = true;
         // для стилизации кнопок которые в очереди, к ним еще лифт не идет
         setTimeout(() => {
+          if (this.floors.length === 1) {
+            this.lastfloor = this.floors[0];
+            this.workLocalStorage("lastfloor")
+          }
           this.floors.shift();
           this.pause.rest = false;
           this.blink = false;
@@ -179,8 +189,8 @@ export default {
         if (actualFloor === prevFloor) return null;
         // первый запуск, предыдущего этажа тут нет
         if (this.floors.length === 1 && prevFloor === undefined) {
-          // проверка на первый случай, чтоб находясь на 1 этаже нельзя было выбрать 1 этаж
-          if (actualFloor === 1) {
+          // проверка на первый случай, чтоб находясь на 1 (или  значения из localstorage) этаже нельзя было выбрать этот же этаж
+          if (actualFloor === this.lastfloor) {
             this.floors.shift();
             this.workLocalStorage("floors");
             return null;
@@ -188,9 +198,11 @@ export default {
 
           this.queue.push({
             actualFloor: actualFloor,
-            speed: actualFloor === 0 ? 1 : actualFloor,
+            // speed: actualFloor === 0 ? 1 : actualFloor,
+            speed: Math.abs(actualFloor - this.lastfloor),
             // по умолчанию первый раз навверх лифт идет
-            direction: "up",
+            // direction: "up",
+            direction: actualFloor > this.lastfloor ? "up" : "down",
             // ожидаемые координаты прибытия в процентах
             coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
           });
@@ -218,6 +230,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+$height: v-bind('blink');
+
 .lift {
   margin: auto;
   width: 205px;
@@ -308,7 +323,6 @@ export default {
     50% {
       opacity: 0.5;
     }
-    // придумать что то получше
   }
 }
 </style>
