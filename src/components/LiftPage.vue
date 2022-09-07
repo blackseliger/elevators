@@ -1,4 +1,4 @@
-<!-- eslint-disable no-debugger -->
+
 <template>
   <div class="lift">
     <div
@@ -80,23 +80,14 @@ export default {
 
   data() {
     return {
-      // стек этажей, первый зашел - первый вышел
       floors: [],
-      // последний этаж
-      lastfloor: '',
-      // очередь
+      lastfloor: "",
       queue: [],
-      // на паузе по умолчанию до первого старта
       pause: { rest: false },
-      // выбранный этаж
       selected: 0,
-      // класс с опциями, для движения кабины
       classMove: null,
-      // ожидаемые актуальные координаты прибытия кабины
       showDirect: null,
-      // индекс сет интервала когда запускается работа лифта.
       indexStart: false,
-      // находится ли в движении
       move: false,
       blink: false,
     };
@@ -106,16 +97,18 @@ export default {
     this.floors = JSON.parse(localStorage.getItem("floors")) || [];
     this.queue = JSON.parse(localStorage.getItem("queue")) || [];
     this.lastfloor = JSON.parse(localStorage.getItem("lastfloor")) || 1;
-    
-    this.classMove = {top: `${100 - Math.floor((this.lastfloor * 100) / this.levels.length)}%`}
+
+    this.classMove = {
+      top: `${100 - Math.floor((this.lastfloor * 100) / this.levels.length)}%`,
+    };
 
     if (this.floors.length || this.queue.length) {
+      this.classMove = { top: `${this.queue[0]?.coords}%` };
       this.startWork();
     }
   },
 
   methods: {
-    // метод, который запускает движение лифта
     pushLift() {
       const cabin = this.$refs.cabin;
       let amountValuesH =
@@ -141,11 +134,11 @@ export default {
         this.move = false;
         this.pause.rest = true;
         this.blink = true;
-        // для стилизации кнопок которые в очереди, к ним еще лифт не идет
+
         setTimeout(() => {
           if (this.floors.length === 1) {
             this.lastfloor = this.floors[0];
-            this.workLocalStorage("lastfloor")
+            this.workLocalStorage("lastfloor");
           }
           this.floors.shift();
           this.pause.rest = false;
@@ -158,8 +151,6 @@ export default {
     },
 
     startWork() {
-      // каждую секунду вызывает метод для проверка
-      // проверка на первый запуск, чтоб не запускался по новой регулярно
       if (this.indexStart === false) {
         this.indexStart = setInterval(() => {
           this.pushLift();
@@ -173,23 +164,20 @@ export default {
   },
 
   watch: {
-    // выбирается актуальный вызов лифта и добавляется в стек "вызовов" этажей
     selected() {
       this.floors.push(this.selected);
       this.workLocalStorage("floors");
     },
 
-    // здесь добавляется в очередь количество будущих поездок на этажи
     floors: {
       deep: true,
       handler() {
         let actualFloor = this.floors[this.floors.length - 1];
         let prevFloor = this.floors[this.floors.length - 2];
-        // если этажи равны, то ничего не делаем;
+
         if (actualFloor === prevFloor) return null;
-        // первый запуск, предыдущего этажа тут нет
+
         if (this.floors.length === 1 && prevFloor === undefined) {
-          // проверка на первый случай, чтоб находясь на 1 (или  значения из localstorage) этаже нельзя было выбрать этот же этаж
           if (actualFloor === this.lastfloor) {
             this.floors.shift();
             this.workLocalStorage("floors");
@@ -198,30 +186,21 @@ export default {
 
           this.queue.push({
             actualFloor: actualFloor,
-            // speed: actualFloor === 0 ? 1 : actualFloor,
             speed: Math.abs(actualFloor - this.lastfloor),
-            // по умолчанию первый раз навверх лифт идет
-            // direction: "up",
             direction: actualFloor > this.lastfloor ? "up" : "down",
-            // ожидаемые координаты прибытия в процентах
             coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
           });
           this.workLocalStorage("queue");
         } else {
           this.queue.push({
             actualFloor: actualFloor,
-            // расчет скорости для анимации, должен всегда 1 этаж в секунду
-            // speed: Math.abs(actualFloor - (prevFloor + 1)),
             speed: Math.abs(actualFloor - prevFloor),
-
-            // установка направления поездки
             direction: actualFloor > prevFloor ? "up" : "down",
             coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
           });
           this.workLocalStorage("queue");
         }
-
-        // запускает работу
+        
         this.startWork();
       },
     },
@@ -230,8 +209,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
-$height: v-bind('blink');
+$height: v-bind("blink");
 
 .lift {
   margin: auto;
