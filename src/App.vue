@@ -1,9 +1,15 @@
 <template>
+
+  <div class="lifts">
+
   <LiftPage :levels="levels"/>
+
+  </div>
 </template>
 
 <script>
-import LiftPage from "./components/LiftPage.vue";
+import LiftPage from "@/components/LiftPage.vue";
+// import UiButton from '@/components/UiButton.vue';
 
 export default {
   name: "App",
@@ -12,7 +18,7 @@ export default {
   },
 
   data() {
-    return { levels: [5, 4, 3, 2, 1] };
+    return { levels: [6, 5, 4, 3, 2, 1] };
   },
 };
 </script>

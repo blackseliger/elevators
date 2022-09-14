@@ -1,61 +1,66 @@
 
 <template>
   <div class="lift">
-    <div
-      v-for="level in levels"
-      :key="`${level}-lift`"
-      :class="`lift__shaft_${level} lift__shaft`"
-    >
-      {{ level }}
-    </div>
+    <div class="lift__floors">
+      <div
+        v-for="level in levels"
+        :key="`${level}-lift`"
+        :class="`lift__shaft_${level} lift__shaft`"
+      >
+        {{ level }}
+      </div>
 
-    <div
-      class="lift__shaft_cabin lift__shaft"
-      :class="{ lift__shaft_cabin_blinker: blink }"
-      :style="classMove"
-      ref="cabin"
-    >
-      <ui-icon
-        style="
-          position: absolute;
-          transform: rotate(270deg);
-          top: -17px;
-          background-color: #2711c1b3;
-          width: 40px;
-          height: 50px;
-          opacity: 0.6;
-        "
-        :icon="`arrow`"
-        v-show="showDirect === 'up' ? true : false"
-      />
-      cabin
-      <ui-icon
-        style="
-          position: absolute;
-          transform: rotate(90deg);
-          top: 68%;
-          background-color: #2711c1b3;
-          width: 40px;
-          height: 50px;
-          opacity: 0.6;
-        "
-        :icon="`arrow`"
-        v-show="showDirect === 'down' ? true : false"
-      />
+      <div
+        class="lift__shaft_cabin lift__shaft"
+        :class="{ lift__shaft_cabin_blinker: blink }"
+        :style="classMove"
+        ref="cabin"
+      >
+        <ui-icon
+          style="
+            position: absolute;
+            transform: rotate(270deg);
+            top: -17px;
+            background-color: #2711c1b3;
+            width: 40px;
+            height: 50px;
+            opacity: 0.6;
+          "
+          :icon="`arrow`"
+          v-show="showDirect === 'up' ? true : false"
+        />
+        cabin
+        <ui-icon
+          style="
+            position: absolute;
+            transform: rotate(90deg);
+            top: 68%;
+            background-color: #2711c1b3;
+            width: 40px;
+            height: 50px;
+            opacity: 0.6;
+          "
+          :icon="`arrow`"
+          v-show="showDirect === 'down' ? true : false"
+        />
+      </div>
     </div>
-
-    <ui-button
-      v-for="level in levels"
-      :key="`${level}-button`"
-      :value="level"
-      v-model:selected="selected"
-      :class="[
-        parseInt(level) === queue[0]?.actualFloor ? 'lift__button_actual' : '',
-        floors?.includes(parseInt(level)) ? 'lift__button_queue' : '',
-        `lift__button_${level}`,
-      ]"
-      >{{ level }} этаж</ui-button
-    >
+    <div class="lift__controls">
+      <ui-button
+        v-for="level in levels"
+        :key="`${level}-button`"
+        :value="level"
+        v-model:selected="selected"
+        :class="[
+          parseInt(level) === queue[0]?.actualFloor
+            ? 'lift__button_actual'
+            : '',
+          floors?.includes(parseInt(level)) ? 'lift__button_queue' : '',
+          `lift__button_${level}`,
+        ]"
+        >{{ level }} этаж
+      </ui-button>
+    </div>
   </div>
 </template>
 
@@ -163,6 +168,12 @@ export default {
     },
   },
 
+  computed: {
+    cssFloors() {
+      return this.levels.length;
+    }
+  },
+
   watch: {
     selected() {
       this.floors.push(this.selected);
@@ -200,7 +211,7 @@ export default {
           });
           this.workLocalStorage("queue");
         }
-        
+
         this.startWork();
       },
     },
@@ -209,32 +220,38 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-$height: v-bind("blink");
-
 .lift {
   margin: auto;
   width: 205px;
   max-width: 205px;
   border: 1px solid black;
   padding: 2px;
-  gap: 5px;
+  // gap: 5px;
   position: relative;
 
   /*  grid  */
   display: grid;
   grid-template-columns: 100px 100px;
-  grid-template-rows: repeat(5, 100px);
-  justify-items: center;
-  align-items: center;
-  grid-template-areas:
-    "shaft5 control5"
-    "shaft4 control4"
-    "shaft3 control3"
-    "shaft2 control2"
-    "shaft1 control1";
+
+  &__floors {
+    display: grid;
+    grid-template-rows: repeat(v-bind(cssFloors), 100px);
+    position: relative;
+    gap: 5px;
+    align-items: center;
+    justify-items: center;
+  }
+
+  &__controls {
+    display: grid;
+    grid-template-rows: repeat(v-bind(cssFloors), 100px);
+    gap: 5px;
+    align-items: center;
+    justify-items: center;
+  }
 
   &__shaft {
-    grid-area: shaft;
+    // grid-area: shaft;
     background-color: rgb(230, 118, 118);
     border: 1px solid gray;
     width: 100%;
@@ -257,21 +274,6 @@ $height: v-bind("blink");
     animation: blinker 1s step-start infinite;
   }
 
-  &__shaft_5 {
-    grid-area: shaft5;
-  }
-  &__shaft_4 {
-    grid-area: shaft4;
-  }
-  &__shaft_3 {
-    grid-area: shaft3;
-  }
-  &__shaft_2 {
-    grid-area: shaft2;
-  }
-  &__shaft_1 {
-    grid-area: shaft1;
-  }
 
   &__button {
     &_queue {
@@ -281,21 +283,7 @@ $height: v-bind("blink");
       background-color: #4bc9e9;
     }
   }
-  &__button_5 {
-    grid-area: control5;
-  }
-  &__button_4 {
-    grid-area: control4;
-  }
-  &__button_3 {
-    grid-area: control3;
-  }
-  &__button_2 {
-    grid-area: control2;
-  }
-  &__button_1 {
-    grid-area: control1;
-  }
+
 
   @keyframes blinker {
     50% {
