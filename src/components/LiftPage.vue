@@ -45,27 +45,10 @@
         />
       </div>
     </div>
-    <!-- <div class="lift__controls">
-      <ui-button
-        v-for="level in levels"
-        :key="`${level}-button`"
-        :value="level"
-        v-model:selected="selected"
-        :class="[
-          parseInt(level) === queue[0]?.actualFloor
-            ? 'lift__button_actual'
-            : '',
-          floors?.includes(parseInt(level)) ? 'lift__button_queue' : '',
-          `lift__button_${level}`,
-        ]"
-        >{{ level }} этаж
-      </ui-button>
-    </div> -->
   </div>
 </template>
 
 <script>
-// import UiButton from "@/components/UiButton.vue";
 import UiIcon from "@/components/UiIcon.vue";
 
 export default {
@@ -76,101 +59,123 @@ export default {
     UiIcon,
   },
 
+  data() {
+    return {
+      floor: null,
+      config: {
+        classMove: {
+          top: `${100 - Math.floor((1 * 100) / this.levels.length)}%`,
+        },
+        floors: [0],
+        finish: false,
+        lastfloor: 1,
+        queue: [],
+        pause: false,
+        showDirect: null,
+        move: true,
+        blink: false,
+        start: false,
+        // id: ``,
+      },
+    };
+  },
+
   props: {
     levels: {
       type: Array,
       required: true,
     },
-    config: {
+    selectedFloor: {
+      type: Number || null,
+      required: true,
+    },
+    configParent: {
       type: Object,
       required: true,
-    }
+    },
   },
 
-  // data() {
-  //   return {
-  //     floors: [],
-  //     lastfloor: "",
-  //     queue: [],
-  //     pause: { rest: false },
-  //     selected: 0,
-  //     classMove: null,
-  //     showDirect: null,
-  //     indexStart: false,
-  //     move: false,
-  //     blink: false,
-  //   };
-  // },
+  emits: ["deleteFloorQueue", "changeConfigPar", "changeQueueFloors"],
 
-  // mounted() {
-  //   this.floors = JSON.parse(localStorage.getItem("floors")) || [];
-  //   this.queue = JSON.parse(localStorage.getItem("queue")) || [];
-  //   this.lastfloor = JSON.parse(localStorage.getItem("lastfloor")) || 1;
+  methods: {
+    pause() {
+      let _this = this.config;
+       let _thisPar = this.configParent;
+      setTimeout(() => {
+        // console.log("pause");
+        // if (_this.pause) return null;
+        if (this.configParent.pause) return null;
+        // if (_this.finish === true && !_this.move) {
+        if (_this.finish === true && !this.configParent.move) {
+          this.onChangeConfigPar(this.configParent.index, "pause", true);
 
-  //   this.classMove = {
-  //     top: `${100 - Math.floor((this.lastfloor * 100) / this.levels.length)}%`,
-  //   };
+          // _this.pause.rest = true;
+          _this.blink = true;
+          setTimeout(() => {
+            if (_thisPar.floors.length === 1) {
+              _this.lastfloor = _thisPar.this.floors[0];
+              // this.workLocalStorage("lastfloor");
+            }
+            _this.finish = false;
+            // _this.floors.shift();
 
-  //   if (this.floors.length || this.queue.length) {
-  //     this.classMove = { top: `${this.queue[0]?.coords}%` };
-  //     this.startWork();
-  //   }
-  // },
+            this.onChangeConfigPar(this.configParent.index, "pause", false);
 
-  // methods: {
-  //   pushLift() {
-  //     const cabin = this.$refs.cabin;
-  //     let amountValuesH =
-  //       this.levels.length * 100 + 6 + (this.levels.length - 1) * 5;
-  //     let coords = Math.ceil(
-  //       Math.ceil(parseFloat(getComputedStyle(cabin).top)) /
-  //         (amountValuesH * 0.01)
-  //     );
+            // _this.pause = false;
+            _this.blink = false;
+            _this.queue.shift();
+            this.onChangeConfigPar(this.configParent.index, "move", true);
+            // _this.move = true;
+            // console.log("до повтора", _this.queue.length);
+            if (_this.queue.length) {
+              // console.log("повтор");
+              this.pushLift();
+            }
+            // this.workLocalStorage("floors");
+            // this.workLocalStorage("queue");
+          }, 3000);
+        }
+      }, 0);
+    },
 
-  //     this.classMove = {
-  //       top: `${this.queue[0]?.coords}%`,
-  //       transition: `top ${this.queue[0]?.speed}s ease-in-out`,
-  //     };
+    pushLift() {
+      let _this = this.config;
 
-  //     this.move = true;
-  //     this.showDirect = this.queue[0]?.direction;
+      setTimeout(() => {
+        _this.classMove = {
+          top: `${_this.queue[0]?.coords}%`,
+          transition: `top ${_this.queue[0]?.speed}s ease-in-out`,
+        };
+      }, 0);
 
-  //     if (this.pause.rest) return null;
-  //     if (coords === this.queue[0]?.coords && this.move) {
-  //       // не могу понять в чем баг если выбрать больше 2 этажей, то последний будет бликать 6 секунд. this.queue.shift(); первый раз срабатывает корректно
-  //       // но сам this.queue для setTimeout не обновляется
+      setTimeout(() => {
+        // if (_this.queue.length && !_this.pause) {
+        if (_this.queue.length && !this.configParent.pause) {
+          // console.log("работает второй таймаут в pushlift с проверкой 1");
+          _this.showDirect = _this.queue[0]?.direction;
+        }
+        // if (_this.move && _this.queue[0]) {
+        if (this.configParent.move && _this.queue[0]) {
+          console.log("работает второй таймаут в pushlift с проверкой 2");
 
-  //       this.move = false;
-  //       this.pause.rest = true;
-  //       this.blink = true;
+          this.onChangeConfigPar(this.configParent.index, "move", false);
+          // _this.move = false;
+          setTimeout(() => {
+            _this.finish = true;
+            // this.floors.shift();
+            this.onChangeQueueFloors(this.configParent.index, "shift");
+            this.onDeleteFloorQueue();
+            _this.showDirect = null;
+            this.pause();
+          }, _this.queue[0].speed * 1000);
+        }
+      });
+    },
 
-  //       setTimeout(() => {
-  //         if (this.floors.length === 1) {
-  //           this.lastfloor = this.floors[0];
-  //           this.workLocalStorage("lastfloor");
-  //         }
-  //         this.floors.shift();
-  //         this.pause.rest = false;
-  //         this.blink = false;
-  //         this.queue.shift();
-  //         this.workLocalStorage("floors");
-  //         this.workLocalStorage("queue");
-  //       }, 3000);
-  //     }
-  //   },
-
-  //   startWork() {
-  //     if (this.indexStart === false) {
-  //       this.indexStart = setInterval(() => {
-  //         this.pushLift();
-  //       }, 1000);
-  //     }
-  //   },
-
-  //   workLocalStorage(name) {
-  //     localStorage.setItem(name, JSON.stringify(this[name]));
-  //   },
-  // },
+    startWork() {
+      this.pushLift();
+    },
+  },
 
   computed: {
     cssFloors() {
@@ -178,59 +183,65 @@ export default {
     },
   },
 
-  // watch: {
-  //   selected() {
-  //     this.floors.push(this.selected);
-  //     this.workLocalStorage("floors");
-  //   },
+  watch: {
+    selectedFloor() {
+      if (this.selectedFloor !== null) {
+        console.log('workrkrkrkrk')
+       this.floor = this.selectedFloor;
+      }
+    },
 
-  //   floors: {
-  //     deep: true,
-  //     handler() {
-  //       let actualFloor = this.floors[this.floors.length - 1];
-  //       let prevFloor = this.floors[this.floors.length - 2];
+    floor() {
+      console.log('222222222222')
+      let _this = this.config;
+      let _thisPar = this.configParent;
+      this.onChangeQueueFloors(
+        this.configParent.index,
+        "push",
+        this.selectedFloor
+      );
+      // _this.floors.push(this.selectedFloor);
+      // let actualFloor = _this.floors[_this.floors.length - 1];
+      // let prevFloor = _this.floors[_this.floors.length - 2];
 
-  //       if (actualFloor === prevFloor) return null;
+      let actualFloor = _thisPar.floors[_thisPar.floors.length - 1];
+      let prevFloor = _thisPar.floors[_thisPar.floors.length - 2];
+      if (actualFloor === prevFloor) return null;
 
-  //       if (this.floors.length === 1 && prevFloor === undefined) {
-  //         if (actualFloor === this.lastfloor) {
-  //           this.floors.shift();
-  //           this.workLocalStorage("floors");
-  //           return null;
-  //         }
+      if (_thisPar.floors.length === 1 && prevFloor === undefined) {
+        if (actualFloor === _this.lastfloor) {
+          // _this.floors.shift();
+          this.onChangeQueueFloors(this.configParent.index, "shift");
+          // this.workLocalStorage("floors");
+          return null;
+        }
 
-  //         this.queue.push({
-  //           actualFloor: actualFloor,
-  //           speed: Math.abs(actualFloor - this.lastfloor),
-  //           direction: actualFloor > this.lastfloor ? "up" : "down",
-  //           coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
-  //         });
-  //         this.workLocalStorage("queue");
-  //       } else {
-  //         this.queue.push({
-  //           actualFloor: actualFloor,
-  //           speed: Math.abs(actualFloor - prevFloor),
-  //           direction: actualFloor > prevFloor ? "up" : "down",
-  //           coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
-  //         });
-  //         this.workLocalStorage("queue");
-  //       }
-
-  //       this.startWork();
-  //     },
-  //   },
-  // },
+        _this.queue.push({
+          actualFloor: actualFloor,
+          speed: Math.abs(actualFloor - _this.lastfloor),
+          direction: actualFloor > _this.lastfloor ? "up" : "down",
+          coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
+        });
+        // this.workLocalStorage("queue");
+      } else {
+        _this.queue.push({
+          actualFloor: actualFloor,
+          speed: Math.abs(actualFloor - prevFloor),
+          direction: actualFloor > prevFloor ? "up" : "down",
+          coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
+        });
+        // this.workLocalStorage("queue");
+      }
+      // this.watchLift = false;
+      // console.log("queue увеличился");
+      this.startWork();
+    },
+  },
 };
 </script>
 
 <style lang="scss" scoped>
 .lift {
-  // margin: auto;
-  // width: 205px;
-  // max-width: 205px;
-  // border: 1px solid black;
-  // padding: 2px;
-  // gap: 5px;
   position: relative;
 
   /*  grid  */
