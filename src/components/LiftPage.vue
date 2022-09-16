@@ -55,7 +55,6 @@ export default {
   name: "LiftPage",
 
   components: {
-    // UiButton,
     UiIcon,
   },
 
@@ -75,7 +74,6 @@ export default {
         move: true,
         blink: false,
         start: false,
-        // id: ``,
       },
     };
   },
@@ -93,53 +91,45 @@ export default {
       type: Object,
       required: true,
     },
-    deleteFloorQueue: {
-      type: Function,
-    },
-    changeConfigPar: {
-      type: Function,
-    },
-    changeQueueFloors: {
-      type: Function,
-    },
   },
+
+  emits: ["deleteFloorQueue", "changeConfigPar", "changeQueueFloors"],
 
   methods: {
     pause() {
       let _this = this.config;
       let _thisPar = this.configParent;
       setTimeout(() => {
-        // console.log("pause");
-        // if (_this.pause) return null;
         if (this.configParent.pause) return null;
-        // if (_this.finish === true && !_this.move) {
+       
         if (_this.finish === true && !this.configParent.move) {
-          this.changeConfigPar(this.configParent.index, "pause", true);
-
-          // _this.pause.rest = true;
+          this.$emit("changeConfigPar", this.configParent.index, "pause", true);
           _this.blink = true;
           setTimeout(() => {
             if (_thisPar.floors.length === 1) {
               _this.lastfloor = _thisPar.floors[0];
-              // this.workLocalStorage("lastfloor");
             }
             _this.finish = false;
-            // _this.floors.shift();
+      
+            this.$emit(
+              "changeConfigPar",
+              this.configParent.index,
+              "pause",
+              false
+            );
 
-            this.changeConfigPar(this.configParent.index, "pause", false);
-
-            // _this.pause = false;
             _this.blink = false;
             _this.queue.shift();
-            this.changeConfigPar(this.configParent.index, "move", true);
-            // _this.move = true;
-            // console.log("до повтора", _this.queue.length);
+            this.$emit(
+              "changeConfigPar",
+              this.configParent.index,
+              "move",
+              true
+            );
+
             if (_this.queue.length) {
-              // console.log("повтор");
               this.pushLift();
             }
-            // this.workLocalStorage("floors");
-            // this.workLocalStorage("queue");
           }, 3000);
         }
       }, 0);
@@ -156,22 +146,18 @@ export default {
       }, 0);
 
       setTimeout(() => {
-        // if (_this.queue.length && !_this.pause) {
         if (_this.queue.length && !this.configParent.pause) {
-          // console.log("работает второй таймаут в pushlift с проверкой 1");
           _this.showDirect = _this.queue[0]?.direction;
         }
-        // if (_this.move && _this.queue[0]) {
+
         if (this.configParent.move && _this.queue[0]) {
           console.log("работает второй таймаут в pushlift с проверкой 2");
+          this.$emit("changeConfigPar", this.configParent.index, "move", false);
 
-          this.changeConfigPar(this.configParent.index, "move", false);
-          // _this.move = false;
           setTimeout(() => {
             _this.finish = true;
-            // this.floors.shift();
-            this.changeQueueFloors(this.configParent.index, "shift");
-            this.deleteFloorQueue();
+            this.$emit("changeQueueFloors", this.configParent.index, "shift");
+            this.$emit("deleteFloorQueue");
             _this.showDirect = null;
             this.pause();
           }, _this.queue[0].speed * 1000);
@@ -202,14 +188,12 @@ export default {
       console.log("222222222222");
       let _this = this.config;
       let _thisPar = this.configParent;
-      this.changeQueueFloors(
+      this.$emit(
+        "changeQueueFloors",
         this.configParent.index,
         "push",
         this.selectedFloor
       );
-      // _this.floors.push(this.selectedFloor);
-      // let actualFloor = _this.floors[_this.floors.length - 1];
-      // let prevFloor = _this.floors[_this.floors.length - 2];
 
       let actualFloor = _thisPar.floors[_thisPar.floors.length - 1];
       let prevFloor = _thisPar.floors[_thisPar.floors.length - 2];
@@ -217,9 +201,7 @@ export default {
 
       if (_thisPar.floors.length === 1 && prevFloor === undefined) {
         if (actualFloor === _this.lastfloor) {
-          // _this.floors.shift();
-          this.changeQueueFloors(this.configParent.index, "shift");
-          // this.workLocalStorage("floors");
+          this.$emit("changeQueueFloors", this.configParent.index, "shift");
           return null;
         }
 
@@ -239,8 +221,6 @@ export default {
         });
         // this.workLocalStorage("queue");
       }
-      // this.watchLift = false;
-      // console.log("queue увеличился");
       this.startWork();
     },
   },

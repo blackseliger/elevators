@@ -12,9 +12,9 @@
           floors: lift.floors,
         }"
         :selectedFloor="lift.id === actualIndex ? selected : null"
-        :deleteFloorQueue="deleteFloorQueue"
-        :changeConfigPar="changeConfigPar"
-        :changeQueueFloors="changeQueueFloors"
+        @deleteFloorQueue="deleteFloorQueue"
+        @changeConfigPar="changeConfigPar"
+        @changeQueueFloors="changeQueueFloors"
       />
     </div>
     <div class="lifts__controls">
@@ -50,7 +50,7 @@ export default {
   data() {
     return {
       levels: [5, 4, 3, 2, 1],
-      liftsAmount: 2,
+      liftsAmount: 3,
       queueLifts: [],
       lifts: [],
       floors: [],
@@ -64,18 +64,9 @@ export default {
   created() {
     for (let i = 0; i < this.liftsAmount; i++) {
       this.lifts.push({
-        // classMove: {
-        //   top: `${100 - Math.floor((1 * 100) / this.levels.length)}%`,
-        // },
         floors: [0],
-        // finish: false,
-        // lastfloor: 1,
-        // queue: [],
         pause: false,
-        // showDirect: null,
         move: true,
-        // blink: false,
-        // start: false,
         id: i,
       });
     }
@@ -116,83 +107,12 @@ export default {
     },
 
     changeQueueFloors(index, method, value = null) {
-      if (method === 'push') {
-        this.lifts[index].floors.push(value)
-      } else if (method === 'shift') {
+      if (method === "push") {
+        this.lifts[index].floors.push(value);
+      } else if (method === "shift") {
         this.lifts[index].floors.shift();
       }
     },
-    // pause() {
-    //   // let _this = this.actualLift;
-    //   let _this = this.queueLifts[this.actualIndex];
-
-    //   setTimeout(() => {
-    //     // console.log("pause");
-    //     if (_this.pause.rest) return null;
-    //     if (_this.finish === true && !_this.move) {
-    //       _this.pause.rest = true;
-    //       _this.blink = true;
-    //       setTimeout(() => {
-    //         if (_this.floors.length === 1) {
-    //           _this.lastfloor = _this.floors[0];
-    //           // this.workLocalStorage("lastfloor");
-    //         }
-    //         _this.finish = false;
-    //         _this.floors.shift();
-    //         _this.pause.rest = false;
-    //         _this.blink = false;
-    //         _this.queue.shift();
-    //         _this.move = true;
-    //         // console.log("до повтора", _this.queue.length);
-    //         if (_this.queue.length) {
-    //           // console.log("повтор");
-    //           this.pushLift();
-    //         }
-    //         // this.workLocalStorage("floors");
-    //         // this.workLocalStorage("queue");
-    //       }, 3000);
-    //     }
-    //   }, 0);
-    // },
-
-    // pushLift() {
-    //   // let _this = this.actualLift;
-    //   let _this = this.queueLifts[this.actualIndex];
-
-    //   setTimeout(() => {
-    //     _this.classMove = {
-    //       top: `${_this.queue[0]?.coords}%`,
-    //       transition: `top ${_this.queue[0]?.speed}s ease-in-out`,
-    //     };
-    //   }, 0);
-
-    //   setTimeout(() => {
-    //     if (_this.queue.length && !_this.pause.rest) {
-    //       // console.log("работает второй таймаут в pushlift с проверкой 1");
-    //       _this.showDirect = _this.queue[0]?.direction;
-    //     }
-    //     if (_this.move && _this.queue[0]) {
-    //       console.log("работает второй таймаут в pushlift с проверкой 2");
-
-    //       _this.move = false;
-    //       setTimeout(() => {
-    //         _this.finish = true;
-    //         this.floors.shift();
-    //         _this.showDirect = null;
-    //         this.pause();
-    //       }, _this.queue[0].speed * 1000);
-    //     }
-    //   });
-    //   // тут что то не так
-    //   // setTimeout(() => {
-    //   //   // _this.move = true;
-    //   //   // _this.showDirect = _this.queue[0]?.direction;
-    //   // });
-    // },
-
-    // startWork() {
-    //   this.pushLift();
-    // },
 
     workLocalStorage(name) {
       localStorage.setItem(name, JSON.stringify(this[name]));
@@ -218,75 +138,13 @@ export default {
         );
 
         this.actualIndex = actualLiftIndex;
-        console.log("ghjghjg");
-        // let isNew = this.queueLifts.indexOf(
-        //   (el) => el.id === this.lifts[actualLiftIndex].id
-        // );
-        // if (isNew !== -1) {
-        //   this.actualIndex = isNew;
-        // } else {
-        //   this.queueLifts = [
-        //     ...this.queueLifts,
-        //     ...[this.lifts[actualLiftIndex]],
-        //   ];
-        //   this.actualIndex = this.queueLifts.length - 1;
-        // }
       } else {
-        // let isNew = this.queueLifts.indexOf((el) => el.id === this.lifts[0].id);
-        // if (isNew !== -1) {
-        //   this.actualIndex = isNew;
-        // } else {
-        //   this.queueLifts = [...this.queueLifts, ...[this.lifts[0]]];
-        //   this.actualIndex = this.queueLifts.length - 1;
-        // }
         this.actualIndex = 0;
       }
 
-      // this.queueLifts[this.actualIndex].floors = [
-      //   ...this.queueLifts[this.actualIndex].floors,
-      //   ...[this.selected],
-      // ];
       this.floors.push(this.selected);
-      // this.workLocalStorage("floors");
     },
-
-    // queueLifts() {
-    //   // let _this = this.actualLift;
-    //   let _this = this.queueLifts[this.actualIndex];
-    //   let actualFloor = _this.floors[_this.floors.length - 1];
-    //   let prevFloor = _this.floors[_this.floors.length - 2];
-
-    //   if (actualFloor === prevFloor) return null;
-
-    //   if (_this.floors.length === 1 && prevFloor === undefined) {
-    //     if (actualFloor === _this.lastfloor) {
-    //       _this.floors.shift();
-    //       // this.workLocalStorage("floors");
-    //       return null;
-    //     }
-
-    //     _this.queue.push({
-    //       actualFloor: actualFloor,
-    //       speed: Math.abs(actualFloor - _this.lastfloor),
-    //       direction: actualFloor > _this.lastfloor ? "up" : "down",
-    //       coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
-    //     });
-    //     // this.workLocalStorage("queue");
-    //   } else {
-    //     _this.queue.push({
-    //       actualFloor: actualFloor,
-    //       speed: Math.abs(actualFloor - prevFloor),
-    //       direction: actualFloor > prevFloor ? "up" : "down",
-    //       coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
-    //     });
-    //     // this.workLocalStorage("queue");
-    //   }
-    //   // this.watchLift = false;
-    //   // console.log("queue увеличился");
-    //   this.startWork();
-    // },
   },
-  // },
 };
 </script>
 
