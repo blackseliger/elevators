@@ -12,9 +12,9 @@
           floors: lift.floors,
         }"
         :selectedFloor="lift.id === actualIndex ? selected : null"
-        :deleteFloorQueue="deleteFloorQueue()"
-        :changeConfigPar="changeConfigPar()"
-        :changeQueueFloors="changeQueueFloors()"
+        :deleteFloorQueue="deleteFloorQueue"
+        :changeConfigPar="changeConfigPar"
+        :changeQueueFloors="changeQueueFloors"
       />
     </div>
     <div class="lifts__controls">

@@ -93,38 +93,45 @@ export default {
       type: Object,
       required: true,
     },
+    deleteFloorQueue: {
+      type: Function,
+    },
+    changeConfigPar: {
+      type: Function,
+    },
+    changeQueueFloors: {
+      type: Function,
+    },
   },
-
-  emits: ["deleteFloorQueue", "changeConfigPar", "changeQueueFloors"],
 
   methods: {
     pause() {
       let _this = this.config;
-       let _thisPar = this.configParent;
+      let _thisPar = this.configParent;
       setTimeout(() => {
         // console.log("pause");
         // if (_this.pause) return null;
         if (this.configParent.pause) return null;
         // if (_this.finish === true && !_this.move) {
         if (_this.finish === true && !this.configParent.move) {
-          this.onChangeConfigPar(this.configParent.index, "pause", true);
+          this.changeConfigPar(this.configParent.index, "pause", true);
 
           // _this.pause.rest = true;
           _this.blink = true;
           setTimeout(() => {
             if (_thisPar.floors.length === 1) {
-              _this.lastfloor = _thisPar.this.floors[0];
+              _this.lastfloor = _thisPar.floors[0];
               // this.workLocalStorage("lastfloor");
             }
             _this.finish = false;
             // _this.floors.shift();
 
-            this.onChangeConfigPar(this.configParent.index, "pause", false);
+            this.changeConfigPar(this.configParent.index, "pause", false);
 
             // _this.pause = false;
             _this.blink = false;
             _this.queue.shift();
-            this.onChangeConfigPar(this.configParent.index, "move", true);
+            this.changeConfigPar(this.configParent.index, "move", true);
             // _this.move = true;
             // console.log("до повтора", _this.queue.length);
             if (_this.queue.length) {
@@ -158,13 +165,13 @@ export default {
         if (this.configParent.move && _this.queue[0]) {
           console.log("работает второй таймаут в pushlift с проверкой 2");
 
-          this.onChangeConfigPar(this.configParent.index, "move", false);
+          this.changeConfigPar(this.configParent.index, "move", false);
           // _this.move = false;
           setTimeout(() => {
             _this.finish = true;
             // this.floors.shift();
-            this.onChangeQueueFloors(this.configParent.index, "shift");
-            this.onDeleteFloorQueue();
+            this.changeQueueFloors(this.configParent.index, "shift");
+            this.deleteFloorQueue();
             _this.showDirect = null;
             this.pause();
           }, _this.queue[0].speed * 1000);
@@ -186,16 +193,16 @@ export default {
   watch: {
     selectedFloor() {
       if (this.selectedFloor !== null) {
-        console.log('workrkrkrkrk')
-       this.floor = this.selectedFloor;
+        console.log("workrkrkrkrk");
+        this.floor = this.selectedFloor;
       }
     },
 
     floor() {
-      console.log('222222222222')
+      console.log("222222222222");
       let _this = this.config;
       let _thisPar = this.configParent;
-      this.onChangeQueueFloors(
+      this.changeQueueFloors(
         this.configParent.index,
         "push",
         this.selectedFloor
@@ -211,7 +218,7 @@ export default {
       if (_thisPar.floors.length === 1 && prevFloor === undefined) {
         if (actualFloor === _this.lastfloor) {
           // _this.floors.shift();
-          this.onChangeQueueFloors(this.configParent.index, "shift");
+          this.changeQueueFloors(this.configParent.index, "shift");
           // this.workLocalStorage("floors");
           return null;
         }
