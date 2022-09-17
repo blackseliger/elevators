@@ -93,7 +93,7 @@ export default {
     },
   },
 
-  emits: ["deleteFloorQueue", "changeConfigPar", "changeQueueFloors"],
+  emits: ["deleteFloorQueue", "changeConfigPar", "changeQueueFloors", "deleteSelected"],
 
   mounted() {
     this.config.queue =
@@ -138,7 +138,7 @@ export default {
             _this.finish = false;
 
             this.$emit("changeConfigPar", _thisPar.index, "pause", false);
-
+             this.$emit("deleteFloorQueue");
             _this.blink = false;
             _this.queue.shift();
             localStorage.setItem(_thisPar.index, JSON.stringify(_this.queue));
@@ -147,7 +147,6 @@ export default {
               JSON.stringify(_this.classMove)
             );
             this.$emit("changeConfigPar", _thisPar.index, "move", true);
-
             if (_this.queue.length) {
               this.pushLift();
             }
@@ -181,6 +180,7 @@ export default {
             this.$emit("deleteFloorQueue");
             _this.showDirect = null;
             this.pause();
+            this.$emit('deleteSelected');
           }, _this.queue[0].speed * 1000);
         }
       });

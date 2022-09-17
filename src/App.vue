@@ -15,6 +15,7 @@
         @deleteFloorQueue="deleteFloorQueue"
         @changeConfigPar="changeConfigPar"
         @changeQueueFloors="changeQueueFloors"
+        @deleteSelected="deleteSelected"
       />
     </div>
     <div class="lifts__controls">
@@ -78,17 +79,18 @@ export default {
     cssFloors() {
       return this.levels.length;
     },
+
   },
 
   mounted() {
-    this.selected = JSON.parse(localStorage.getItem("selected")) || 0;
-    this.floors = JSON.parse(localStorage.getItem("floors")) || [];
+    // this.selected = JSON.parse(localStorage.getItem("selected")) || 0;
+    // this.floors = JSON.parse(localStorage.getItem("floors")) || [];
   },
 
   methods: {
     deleteFloorQueue() {
       this.floors.shift();
-      localStorage.setItem("floors", JSON.stringify(this.floors));
+      // localStorage.setItem("floors", JSON.stringify(this.floors));
     },
 
     changeConfigPar(index, type, bool) {
@@ -103,6 +105,12 @@ export default {
       }
     },
 
+    deleteSelected() {
+      this.selected = null;
+      // localStorage.setItem("selected", JSON.stringify(this.selected));
+
+    },
+
     workLocalStorage(name) {
       localStorage.setItem(name, JSON.stringify(this[name]));
     },
@@ -115,7 +123,6 @@ export default {
       const freeLifts = this.lifts.filter(
         (el) => el.move === true && el.pause === false
       );
-      console.log(freeLifts.length);
       if (freeLifts.length > 0) {
         const lastFloors = freeLifts.map((el) => {
           let value = el.floors[el.floors.length - 1];
@@ -134,7 +141,7 @@ export default {
       }
 
       this.floors.push(this.selected);
-      localStorage.setItem("floors", JSON.stringify(this.floors));
+      // localStorage.setItem("floors", JSON.stringify(this.floors));
     },
   },
 };
