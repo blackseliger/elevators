@@ -24,9 +24,7 @@
         :value="level"
         v-model:selected="selected"
         :class="[
-          parseInt(level) === actualLift?.queue[0]?.actualFloor
-            ? 'controls__button_actual'
-            : '',
+          parseInt(level) === selected ? 'controls__button_actual' : '',
           floors?.includes(parseInt(level)) ? 'controls__button_queue' : '',
           `controls__button_${level}`,
         ]"
@@ -56,7 +54,7 @@ export default {
       floors: [],
       selected: 0,
       indexStart: false,
-      actualLift: null,
+      actualStage: null,
       actualIndex: null,
     };
   },
@@ -82,24 +80,15 @@ export default {
     },
   },
 
-  // mounted() {
-  //   this.floors = JSON.parse(localStorage.getItem("floors")) || [];
-  //   this.queue = JSON.parse(localStorage.getItem("queue")) || [];
-  //   this.lastfloor = JSON.parse(localStorage.getItem("lastfloor")) || 1;
-
-  //   this.classMove = {
-  //     top: `${100 - Math.floor((this.lastfloor * 100) / this.levels.length)}%`,
-  //   };
-
-  //   if (this.floors.length || this.queue.length) {
-  //     this.classMove = { top: `${this.queue[0]?.coords}%` };
-  //     this.startWork();
-  //   }
-  // },
+  mounted() {
+    this.selected = JSON.parse(localStorage.getItem("selected")) || 0;
+    this.floors = JSON.parse(localStorage.getItem("floors")) || [];
+  },
 
   methods: {
     deleteFloorQueue() {
       this.floors.shift();
+      localStorage.setItem("floors", JSON.stringify(this.floors));
     },
 
     changeConfigPar(index, type, bool) {
@@ -121,6 +110,8 @@ export default {
 
   watch: {
     selected() {
+      localStorage.setItem("selected", JSON.stringify(this.selected));
+
       const freeLifts = this.lifts.filter(
         (el) => el.move === true && el.pause === false
       );
@@ -143,6 +134,7 @@ export default {
       }
 
       this.floors.push(this.selected);
+      localStorage.setItem("floors", JSON.stringify(this.floors));
     },
   },
 };

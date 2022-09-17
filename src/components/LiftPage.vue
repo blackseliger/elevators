@@ -67,7 +67,7 @@ export default {
         },
         floors: [0],
         finish: false,
-        lastfloor: 1,
+        lastfloor: null,
         queue: [],
         pause: false,
         showDirect: null,
@@ -95,37 +95,58 @@ export default {
 
   emits: ["deleteFloorQueue", "changeConfigPar", "changeQueueFloors"],
 
+  mounted() {
+    this.config.queue =
+      JSON.parse(localStorage.getItem(this.configParent.index)) || [];
+
+    const defaultMove = {
+      top: `${100 - Math.floor((1 * 100) / this.levels.length)}%`,
+    };
+    this.config.classMove =
+      JSON.parse(
+        localStorage.getItem(`${this.configParent.index}/classMove`)
+      ) || defaultMove;
+
+    this.config.lastfloor =
+      JSON.parse(
+        localStorage.getItem(`${this.configParent.index}/lastFloor`)
+      ) || 1;
+    // this.config.showDirect = JSON.parse(localStorage.getItem( `${this.configParent.index.index}/showDirect`)) || null;
+    if (this.config.queue.length) {
+      this.startWork();
+    }
+  },
+
   methods: {
     pause() {
       let _this = this.config;
       let _thisPar = this.configParent;
       setTimeout(() => {
         if (this.configParent.pause) return null;
-       
+
         if (_this.finish === true && !this.configParent.move) {
           this.$emit("changeConfigPar", this.configParent.index, "pause", true);
           _this.blink = true;
           setTimeout(() => {
             if (_thisPar.floors.length === 1) {
               _this.lastfloor = _thisPar.floors[0];
+              localStorage.setItem(
+                `${this.configParent.index}/lastFloor`,
+                JSON.stringify(_this.lastfloor)
+              );
             }
             _this.finish = false;
-      
-            this.$emit(
-              "changeConfigPar",
-              this.configParent.index,
-              "pause",
-              false
-            );
+
+            this.$emit("changeConfigPar", _thisPar.index, "pause", false);
 
             _this.blink = false;
             _this.queue.shift();
-            this.$emit(
-              "changeConfigPar",
-              this.configParent.index,
-              "move",
-              true
+            localStorage.setItem(_thisPar.index, JSON.stringify(_this.queue));
+            localStorage.setItem(
+              `${_thisPar.index}/classMove`,
+              JSON.stringify(_this.classMove)
             );
+            this.$emit("changeConfigPar", _thisPar.index, "move", true);
 
             if (_this.queue.length) {
               this.pushLift();
@@ -137,6 +158,7 @@ export default {
 
     pushLift() {
       let _this = this.config;
+      // let _thisPar = this.configParent;
 
       setTimeout(() => {
         _this.classMove = {
@@ -151,7 +173,6 @@ export default {
         }
 
         if (this.configParent.move && _this.queue[0]) {
-          console.log("работает второй таймаут в pushlift с проверкой 2");
           this.$emit("changeConfigPar", this.configParent.index, "move", false);
 
           setTimeout(() => {
@@ -179,24 +200,22 @@ export default {
   watch: {
     selectedFloor() {
       if (this.selectedFloor !== null) {
-        console.log("workrkrkrkrk");
         this.floor = this.selectedFloor;
       }
     },
 
     floor() {
-      console.log("222222222222");
       let _this = this.config;
       let _thisPar = this.configParent;
       this.$emit(
         "changeQueueFloors",
-        this.configParent.index,
+        _thisPar.index,
         "push",
         this.selectedFloor
       );
 
       let actualFloor = _thisPar.floors[_thisPar.floors.length - 1];
-      let prevFloor = _thisPar.floors[_thisPar.floors.length - 2];
+      let prevFloor = _thisPar.floors[_thisPar.floors.length - 2] || _this.lastfloor;
       if (actualFloor === prevFloor) return null;
 
       if (_thisPar.floors.length === 1 && prevFloor === undefined) {
@@ -212,6 +231,7 @@ export default {
           coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
         });
         // this.workLocalStorage("queue");
+        localStorage.setItem(_thisPar.index, JSON.stringify(_this.queue));
       } else {
         _this.queue.push({
           actualFloor: actualFloor,
@@ -219,6 +239,8 @@ export default {
           direction: actualFloor > prevFloor ? "up" : "down",
           coords: 100 - Math.floor((actualFloor * 100) / this.levels.length),
         });
+        localStorage.setItem(_thisPar.index, JSON.stringify(_this.queue));
+
         // this.workLocalStorage("queue");
       }
       this.startWork();
