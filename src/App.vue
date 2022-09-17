@@ -50,6 +50,7 @@ export default {
     return {
       levels: [5, 4, 3, 2, 1],
       liftsAmount: 3,
+      // главные настройки за количество. Levels отвечает за этажи, liftsAmount за лифты 
       queueLifts: [],
       lifts: [],
       floors: [],
