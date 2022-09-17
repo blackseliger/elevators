@@ -25,7 +25,7 @@
         :value="level"
         v-model:selected="selected"
         :class="[
-          parseInt(level) === selected ? 'controls__button_actual' : '',
+          parseInt(level) === actualButton ? 'controls__button_actual' : '',
           floors?.includes(parseInt(level)) ? 'controls__button_queue' : '',
           `controls__button_${level}`,
         ]"
@@ -54,8 +54,7 @@ export default {
       lifts: [],
       floors: [],
       selected: 0,
-      indexStart: false,
-      actualStage: null,
+      actualButton: 0,
       actualIndex: null,
     };
   },
@@ -80,6 +79,9 @@ export default {
       return this.levels.length;
     },
 
+    selectedButton() {
+      return this.selected !== this.oldSelected ? this.selected : null;
+    },
   },
 
   mounted() {
@@ -108,17 +110,18 @@ export default {
     deleteSelected() {
       this.selected = null;
       // localStorage.setItem("selected", JSON.stringify(this.selected));
-
-    },
-
-    workLocalStorage(name) {
-      localStorage.setItem(name, JSON.stringify(this[name]));
     },
   },
 
   watch: {
-    selected() {
-      localStorage.setItem("selected", JSON.stringify(this.selected));
+    selected(newvalue, oldValue) {
+
+      if (newvalue === oldValue) {
+        this.actualButton = null;
+        return;
+      }
+      this.actualButton = newvalue;
+      // localStorage.setItem("selected", JSON.stringify(this.selected));
 
       const freeLifts = this.lifts.filter(
         (el) => el.move === true && el.pause === false
